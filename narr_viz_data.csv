@@ -1,4 +1,4 @@
-,Employee ID,Date of Joining,Gender,Company Type,WFH Setup Available,Designation,Resource Allocation,Mental Fatigue Score,Burn Rate
+,Employee_ID,Date_of_Joining,Gender,Company_Type,WFH_Setup_Available,Designation,Resource_Allocation,Mental_Fatigue_Score,Burn_Rate
 3402,fffe32003500330035003400,2008-04-22,Male,Service,No,0.0,1.0,0.1,0.01
 16877,fffe31003700320034003800,2008-07-02,Male,Service,Yes,2.0,2.0,4.7,0.29
 6536,fffe31003800350039003900,2008-12-22,Male,Product,Yes,2.0,5.0,5.2,0.45
