@@ -3,14 +3,15 @@
 </script>
 <style> circle {fill: lightblue; stroke: black;} </style>
 <body onload='init()'>
-<svg width=300 height=300></svg>
+// <svg width= height=300></svg>
+<svg width= height=600></svg>
 <script>
 	
 async function init() {
 	
 	// set graph dims and margins			 
 	var svg = d3.select("svg"),
-		margin = 50,
+		margin = 100,
 		width = svg.attr("width") - margin,
 		height = svg.attr("height") - margin
 
@@ -67,13 +68,3 @@ async function init() {
 </script>
 </body>
 </html>
-
-
-
-	d3.select('body')
-		.selectAll('p')
-		.data(data)
-		.enter()
-		.append('p')
-			.html(function(d,i) { return 'car ' + i +
-				 ' is a ' + d.Make + '.'; });
