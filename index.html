@@ -21,7 +21,7 @@ async function init() {
 	yrange = [height - margin, 0]
 
 	// read data
-	const data = await d3.csv( 		'https://github.com/RBrynsvold/Rbrynsvold.github.io/blob/main/narr_viz_data.csv');
+	const data = await d3.csv( 		'https://raw.githubusercontent.com/RBrynsvold/Rbrynsvold.github.io/main/narr_viz_data.csv');
 
 	var x = d3.scaleLinear()
 				.domain(xdomain)
