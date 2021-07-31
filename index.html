@@ -52,7 +52,7 @@ async function init() {
 		.attr("transform", "translate("+margin+","+margin+")")
 		.call(d3.axisLeft(y)
 				.tickValues([0.25, 0.50, 0.75, 1.00])
-				.tickFormat(d3.format("~s")) );
+				.tickFormat(d3.format(",.2f")) );
 						 	
 	// Add X axis			
 	d3.select("svg").append("g")
