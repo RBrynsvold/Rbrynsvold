@@ -1,52 +1,80 @@
-Hello World! 
-
-
 <html>
-
-<script src='https://d3js.org/d3.v5.min.js'></script>
-<style> rect {fill: blue; stroke: black; }</style>
-<body><a href="bartest.html" id="" title="bartest">bartest</a>
-<svg width=300 height=300>
-</svg>
+<script src='https://d3js.org/d3.v5.min.js'>	
+</script>
+<style> circle {fill: lightblue; stroke: black;} </style>
+<body onload='init()'>
+<svg width=300 height=300></svg>
 <script>
-var data = [4,8,15,16,23,42];
+	
 
+async function init() {
+	
+	
+	// set graph dims and margins			 
+	var svg = d3.select("svg"),
+		margin = 50,
+		width = svg.attr("width") - margin,
+		height = svg.attr("height") - margin
 
-var svg = d3.select("svg"),
-        margin = 50,
-        width = svg.attr("width") - margin,
-        height = svg.attr("height") - margin
+	// axes domain/ranges
+	xdomain = [10, 150];
+	xrange = [0, width - margin];
+	ydomain = [10, 150];
+	yrange = [height - margin, 0]
 
-xdomain = [0, 1, 2, 3, 4, 5];
-xrange = [0, width - margin];
-ydomain = [0,42];
-yrange = [height - margin, 0]
-var x = d3.scaleBand().domain(xdomain).range(xrange);
-var y = d3.scaleLinear().domain(ydomain).range(yrange);
+	// read data
+	const data = await d3.csv( 		'https://flunky.github.io/cars2017.csv');
 
-d3.select("svg")
-  .attr("width", width + 2 * margin)
-  .attr("height", height + 2 * margin)
-  .append("g") 
-    .attr("transform", "translate("+margin+","+margin+")")
-  .selectAll("rect")
-  .data(data)
-  .enter()
-  .append("rect")
-    .attr('x',function(d,i) {return x(i);})
-    .attr('y',function(d,i) {return y(d);})
-    .attr('width',x.bandwidth())
-    .attr('height', function(d,i) {return height - margin - y(d);});
+	var x = d3.scaleLog()
+				.domain(xdomain)
+				.range(xrange);
+	var y = d3.scaleLog()
+				.domain(ydomain)
+				.range(yrange);
+		
+		// Add dots
+	d3.select("svg")
+		.attr("width", width + 2 * margin)
+		.attr("height", height + 2 * margin)
+		.append("g") 
+			.attr("transform", "translate("+margin+","+margin+")")
+		.selectAll("dot")
+		.data(data)
+		.enter()
+		.append("circle")
+			.attr("cx", function (d) { 
+				return x(d.AverageCityMPG); } )
+			.attr("cy", function(d) {
+				return y(d.AverageHighwayMPG); } )
+			.attr("r", function(d) {
+				return (2 + (1 * d.EngineCylinders) ); } );	
+		
+	// Add Y axis
+	d3.select("svg").append("g")
+		.attr("transform", "translate("+margin+","+margin+")")
+		.call(d3.axisLeft(y)
+				.tickValues([10, 20, 50, 100])
+				.tickFormat(d3.format("~s")) );
+						 	
+	// Add X axis			
+	d3.select("svg").append("g")
+		.attr("transform", "translate("+margin+","+height+")")
+		.call(d3.axisBottom(x)
+			    .tickValues([10, 20, 50, 100])
+				.tickFormat(d3.format("~s")) );
 
-d3.select("svg").append("g")
-  .attr("transform", "translate("+margin+","+margin+")")
-  .call(d3.axisLeft(y));
-
-d3.select("svg").append("g")
-  .attr("transform", "translate("+margin+","+height+")")
-  .call(d3.axisBottom(x));
-
-
+	
+}
 </script>
 </body>
 </html>
+
+
+
+	d3.select('body')
+		.selectAll('p')
+		.data(data)
+		.enter()
+		.append('p')
+			.html(function(d,i) { return 'car ' + i +
+				 ' is a ' + d.Make + '.'; });
