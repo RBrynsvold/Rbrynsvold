@@ -13,6 +13,7 @@ async function init() {
 		margin = 50,
 		width = svg.attr("width") - margin,
 		height = svg.attr("height") - margin
+		console.log(width, height)
 
 	// axes domain/ranges
 	xdomain = [0, 10];
@@ -58,7 +59,7 @@ async function init() {
 	d3.select("svg").append("g")
 		.attr("transform", "translate("+margin+","+height+")")
 		.call(d3.axisBottom(x)
-			    .tickValues([10, 20, 50, 100])
+			    .tickValues([3, 6, 9])
 			);
 				//.tickFormat(d3.format("~s")) );
 
