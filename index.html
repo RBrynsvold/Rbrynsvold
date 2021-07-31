@@ -15,9 +15,9 @@ async function init() {
 		height = svg.attr("height") - margin
 
 	// axes domain/ranges
-	xdomain = [10, 150];
+	xdomain = [0, 10];
 	xrange = [0, width - margin];
-	ydomain = [10, 150];
+	ydomain = [0, 1];
 	yrange = [height - margin, 0]
 
 	// read data
@@ -52,14 +52,14 @@ async function init() {
 		.attr("transform", "translate("+margin+","+margin+")")
 		.call(d3.axisLeft(y)
 				.tickValues([0.25, 0.50, 0.75, 1.00])
-				.tickFormat(d3.format("~s")) );
+				//.tickFormat(d3.format("~s")) );
 						 	
 	// Add X axis			
 	d3.select("svg").append("g")
 		.attr("transform", "translate("+margin+","+height+")")
 		.call(d3.axisBottom(x)
 			    .tickValues([10, 20, 50, 100])
-				.tickFormat(d3.format("~s")) );
+				//.tickFormat(d3.format("~s")) );
 
 	
 }
