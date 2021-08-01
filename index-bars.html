@@ -1,0 +1,128 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'>	
+</script>
+<style> .bar { fill: steelblue; } </style>
+<body onload='init()'>
+<p>
+	This is some text above the svg canvas <br>
+
+<label for="cars">Choose a data attribute to see its relationship to Burn Rate:</label>
+
+<select name="attribute" id="attribute">
+  <option value="Gender">Gender</option>
+  <option value="Company_Type">Company Type</option>
+  <option value="WFH_Setup_Available">WFH Setup Available</option>
+  <option value="Designation">Designation</option>
+  <option value="Resource_Allocation">Resource Allocation</option>
+</select>
+
+</p>
+	
+<svg id="container" width=500 height=500></svg>
+<a href="index.html">scatter</a>
+<script>
+	
+async function init() {
+	// read data
+	const data = await d3.csv( 		'https://raw.githubusercontent.com/RBrynsvold/Rbrynsvold.github.io/main/narr_viz_data.csv'); 
+  	console.log(data)
+    console.log(data.Resource_Allocation)
+	
+	var plotData = function(selectedOption) {
+		// set graph dims and margins
+		var baseWidth = 500	
+		    baseHeight = 500		 
+		var svg = d3.select("svg"),
+			margin = 75,
+			width = baseWidth - margin
+			height = baseHeight - margin
+			console.log(width, height)
+	
+		// aggregate based on dropdown selection
+		var xField = selectedOption
+		var agg_data = d3.nest()
+			  		.key(function(d) { return d[xField];})
+			 	 	.rollup(function(d) { 
+			   			return d3.mean(d, function(g) {return g.Burn_Rate; });
+			  		})
+					.entries(data);
+		console.log("after agg")
+		console.log(agg_data)
+					
+		//TODO: str -> num conversion and sorting
+		if (xField == "Designation" || xField == "Resource_Allocation" ) {
+
+			agg_data = agg_data.sort(function(x, y){
+			   return d3.ascending(+x.key, +y.key);
+			})	
+				
+			console.log("sorted?")
+			console.log(agg_data)
+		};
+
+		// axes domain/ranges
+		xdomain = agg_data.map(function(d) { return d.key; });
+		console.log(xdomain)
+		xrange = [0, width - margin];
+		ydomain = [0, 1];
+		yrange = [height - margin, 0]
+
+		var x = d3.scaleBand()
+					.domain(xdomain)
+					.range(xrange);
+		console.log(x)
+		var y = d3.scaleLinear()
+					.domain(ydomain)
+					.range(yrange);
+					
+		var canvas = d3.select("svg")
+						.attr("width", width + 2 * margin)
+						.attr("height", height + 2 * margin)
+						.append("g") 
+							.attr("transform", "translate("+margin+","+margin+")")
+				
+		// Add bars
+		canvas
+		  .selectAll("rect")
+		  .data(agg_data)
+		  .enter()
+		  .append("rect")
+			.attr('class', 'bar')
+			.attr('x',function(d,i) {return x(d.key);})
+			.attr('y',function(d,i) {return y(d.value);})
+		    .attr('width',x.bandwidth())
+		    .attr('height', function(d,i) {return height - margin - y(d.value);});
+		
+		// Add Y axis
+		d3.select("svg").append("g")
+			.attr("transform", "translate("+margin+","+margin+")")
+			.call(d3.axisLeft(y)
+					.tickValues([0.25, 0.50, 0.75, 1.00])
+					.tickFormat(d3.format(",.2f")) );
+						 	
+		// Add X axis			
+		d3.select("svg").append("g")
+			.attr("transform", "translate("+margin+","+height+")")
+			.call(d3.axisBottom(x)
+				);
+				
+		}
+
+	// Handler for dropdown value change
+	var dropdownChange = function() {
+		console.log("drop down value has changed")
+    	var selectedOption = d3.select(this).property('value')
+		d3.selectAll("svg > *").remove();
+		plotData(selectedOption);
+	};
+         
+	var dropdown = d3.select("#attribute")
+                    .on("change", dropdownChange);
+					
+	//inital case (before dropdown selection)
+	plotData(xField = 'Gender');
+
+}
+</script>
+</body>
+</html>

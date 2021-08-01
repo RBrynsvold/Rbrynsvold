@@ -4,78 +4,142 @@
 <style> circle {fill: lightblue; stroke: black;} </style>
 <body onload='init()'>
 <p>
-	This is some text above the svg canvas
+	This is some text above the svg canvas <br>
 
-<label for="cars">Choose a car:</label>
+<label for="cars">Choose a data attribute to see its relationship to Burn Rate:</label>
 
-<select name="cars" id="cars">
-  <option value="volvo">Volvo</option>
-  <option value="saab">Saab</option>
-  <option value="mercedes">Mercedes</option>
-  <option value="audi">Audi</option>
+<select name="attribute" id="attribute">
+  <option value="Mental_Fatigue_Score">Mental Fatigue Score</option>
+  <option value="Date_of_Joining">Date of Joining</option>
 </select>
 
 </p>
 	
-<svg width=500 height=500></svg>
+<svg id="container" width=500 height=500></svg>
+<a href="index-bars.html">bars</a>
 <script>
 	
 async function init() {
-	
-	// set graph dims and margins			 
-	var svg = d3.select("svg"),
-		margin = 75,
-		width = svg.attr("width") - margin,
-		height = svg.attr("height") - margin
-		console.log(width, height)
-
-	// axes domain/ranges
-	xdomain = [0, 10];
-	xrange = [0, width - margin];
-	ydomain = [0, 1];
-	yrange = [height - margin, 0]
-
 	// read data
 	const data = await d3.csv( 		'https://raw.githubusercontent.com/RBrynsvold/Rbrynsvold.github.io/main/narr_viz_data.csv');
-
-	var x = d3.scaleLinear()
-				.domain(xdomain)
-				.range(xrange);
-	var y = d3.scaleLinear()
-				.domain(ydomain)
-				.range(yrange);
-		
-		// Add dots
-	d3.select("svg")
-		.attr("width", width + 2 * margin)
-		.attr("height", height + 2 * margin)
-		.append("g") 
-			.attr("transform", "translate("+margin+","+margin+")")
-		.selectAll("dot")
-		.data(data)
-		.enter()
-		.append("circle")
-			.attr("cx", function (d) { 
-				return x(d.Mental_Fatigue_Score); } )
-			.attr("cy", function(d) {
-				return y(d.Burn_Rate); } )
-			.attr("r", 2);	
-		
-	// Add Y axis
-	d3.select("svg").append("g")
-		.attr("transform", "translate("+margin+","+margin+")")
-		.call(d3.axisLeft(y)
-				.tickValues([0.25, 0.50, 0.75, 1.00])
-				.tickFormat(d3.format(",.2f")) );
-						 	
-	// Add X axis			
-	d3.select("svg").append("g")
-		.attr("transform", "translate("+margin+","+height+")")
-		.call(d3.axisBottom(x)
-			    .tickValues([3, 6, 9])
-				.tickFormat(d3.format("~s")) );
-
 	
+	data.forEach(function(d) {
+	      d.Date_of_Joining = new Date(d.Date_of_Joining); });
+	
+	var plotData = function(selectedOption, changed) {
+		// TODO: plot the data with the selected option
+		
+		//console.log(svg.attr("width"), svg.attr("height"))
+		
+		// set graph dims and margins
+		var baseWidth = 500	
+		    baseHeight = 500		 
+		var svg = d3.select("svg"),
+			margin = 75,
+			//width = svg.attr("width") - margin,
+			width = baseWidth - margin
+			//height = svg.attr("height") - margin
+			height = baseHeight - margin
+			console.log(width, height)
+	
+	
+		// setting up dynamic variables
+		//var xField = 'Mental_Fatigue_Score'
+		var xField = selectedOption
+		if (xField == 'Mental_Fatigue_Score') {
+			console.log("MFS case")
+			var xdomainDynamic = [0, 10]
+			    xTickValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+			    xScaleObj = d3.scaleLinear()
+			    xTickFormat = d3.format("~s")
+		}
+		else {
+			console.log("date case")
+			//var xdomainDynamic = d3.extent(data, function(d) { return new Date(d.Date_of_Joining); })
+			
+			console.log(data.Date_of_Joining)
+			
+			console.log(data.Date_of_Joining)
+			
+			var mindate = new Date(2008,0,1),
+				date2 = new Date(2008,4,1),
+				date3 = new Date(2008,8,1),
+                maxdate = new Date(2008,11,31); 
+			
+			var xdomainDynamic = [mindate, maxdate]
+			    xTickValues = [mindate, date2, date3, maxdate]
+			    xScaleObj = d3.scaleTime()
+				//xScaleObj = d3.time.scale()
+			    //xTickFormat = d3.time.format("%b")
+				xTickFormat = d3.timeFormat("%Y-%m")
+				
+			console.log(xdomainDynamic)
+			console.log(selectedOption)
+		}
+
+		// axes domain/ranges
+		xdomain = xdomainDynamic;
+		xrange = [0, width - margin];
+		ydomain = [0, 1];
+		yrange = [height - margin, 0]
+
+		var x = xScaleObj
+					.domain(xdomain)
+					.range(xrange);
+		console.log(x)
+		var y = d3.scaleLinear()
+					.domain(ydomain)
+					.range(yrange);
+					
+		var canvas = d3.select("svg")
+						.attr("width", width + 2 * margin)
+						.attr("height", height + 2 * margin)
+						.append("g") 
+							.attr("transform", "translate("+margin+","+margin+")")
+				
+		// Add dots
+		canvas
+			.selectAll("dot")
+			.data(data)
+			.enter()
+			.append("circle")
+				.attr("cx", function (d) { 
+					return x(d[xField]); } )
+				.attr("cy", function(d) {
+					return y(d.Burn_Rate); } )
+				.attr("r", 3);	
+		
+		// Add Y axis
+		d3.select("svg").append("g")
+			.attr("transform", "translate("+margin+","+margin+")")
+			.call(d3.axisLeft(y)
+					.tickValues([0.25, 0.50, 0.75, 1.00])
+					.tickFormat(d3.format(",.2f")) );
+						 	
+		// Add X axis			
+		d3.select("svg").append("g")
+			.attr("transform", "translate("+margin+","+height+")")
+			.call(d3.axisBottom(x)
+				    .tickValues(xTickValues)
+					.tickFormat(xTickFormat) 
+				);
+				
+		}
+
+	// Handler for dropdown value change
+	var dropdownChange = function() {
+		console.log("drop down value has changed")
+    	var selectedOption = d3.select(this).property('value')
+		d3.selectAll("svg > *").remove();
+		plotData(selectedOption, changed = true);
+	};
+         
+	var dropdown = d3.select("#attribute")
+                    .on("change", dropdownChange);
+					
+	// TODO
+	plotData(xField = 'Mental_Fatigue_Score', changed = false);
+
 }
 </script>
 </body>
