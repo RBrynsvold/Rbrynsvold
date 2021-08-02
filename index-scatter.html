@@ -1,0 +1,212 @@
+<html>
+<title>Scatter Plot</title>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js">
+</script>
+<style> 
+	circle {fill: lightblue; stroke: black;} 
+	body {
+		font-family: Verdana, Arial, Helvetica, sans-serif;
+		font-size: 12px;
+	}
+	div {
+		background-color: lightgray;
+		padding: 8px;
+	}
+	.toolTip {
+		position: absolute;
+		display: none;
+		pointer-events: none;
+		padding: 2px;
+		background-color: lightblue;
+		max-width: 200px;
+	}
+</style>
+<body onload='init()'>
+	
+<div>
+In the case of our continuous quantitative attributes, we're able to examine the each of their relationship trends with Burn Rate.<br><br>
+
+Hover over the data points to see exact values! <br><br>
+
+</div>		
+	
+<p>
+<label for="attribute">Choose a data attribute to plot it against Burn Rate:</label>
+
+<select name="attribute" id="attribute">
+  <option value="Mental_Fatigue_Score">Mental Fatigue Score</option>
+  <option value="Date_of_Joining">Date of Joining</option>
+</select>
+
+</p>
+	
+<svg id="container" width=500 height=500></svg>
+<br>
+<a href="index-bars.html"><button>Previous</button></a>
+
+<script>
+	
+async function init() {
+	// read data
+	const data = await d3.csv( 		'https://raw.githubusercontent.com/RBrynsvold/Rbrynsvold.github.io/main/narr_viz_data.csv');
+	
+	data.forEach(function(d) {
+	      d.Date_of_Joining = new Date(d.Date_of_Joining); });
+	
+	var plotData = function(selectedOption) {
+				
+		// set graph dims and margins
+		var baseWidth = 500	
+		    baseHeight = 500		 
+		var svg = d3.select("svg"),
+			margin = 75,
+			width = baseWidth - margin
+			height = baseHeight - margin
+	
+	
+		// setting up dynamic variables
+		var xField = selectedOption
+		if (xField == 'Mental_Fatigue_Score') {
+			var xdomainDynamic = [0, 10]
+			    xTickValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+			    xScaleObj = d3.scaleLinear()
+			    xTickFormat = d3.format("~s")
+		}
+		else {
+			
+			var mindate = new Date(2008,0,1),
+				date2 = new Date(2008,4,1),
+				date3 = new Date(2008,8,1),
+                maxdate = new Date(2008,11,31); 
+			
+			var xdomainDynamic = [mindate, maxdate]
+			    xTickValues = [mindate, date2, date3, maxdate]
+			    xScaleObj = d3.scaleTime()
+				xTickFormat = d3.timeFormat("%Y-%m")
+		}
+
+		// axes domain/ranges
+		xdomain = xdomainDynamic;
+		xrange = [0, width - margin];
+		ydomain = [0, 1];
+		yrange = [height - margin, 0]
+		
+		var tooltip = d3.select("body")
+						.append("div")
+						.attr("class", "toolTip")
+		;
+		var formatDecimal = d3.format(".3f")
+
+		var x = xScaleObj
+					.domain(xdomain)
+					.range(xrange);
+		var y = d3.scaleLinear()
+					.domain(ydomain)
+					.range(yrange);
+					
+		var canvas = d3.select("svg")
+						.attr("width", width + 2 * margin)
+						.attr("height", height + 2 * margin)
+						.append("g") 
+							.attr("transform", "translate("+margin+","+margin+")")
+				
+		// Add dots
+		canvas
+			.selectAll("dot")
+			.data(data)
+			.enter()
+			.append("circle")
+				.attr("cx", function (d) { 
+					return x(d[xField]); } )
+				.attr("cy", function(d) {
+					return y(d.Burn_Rate); } )
+				.attr("r", 3)
+				.on("mousemove", function(d){
+				            tooltip
+				              .style("left", d3.event.pageX + 14 + "px")
+				              .style("top", d3.event.pageY + 10 + "px")
+				              .style("display", "inline-block")
+				              .html((d[xField]) + ", " + " Burn Rate: " + 
+															(d.Burn_Rate) );
+				        })
+				 .on("mouseout", function(d){ tooltip.style("display", "none"); });
+					//;	
+		
+		// Add Y axis
+		d3.select("svg").append("g")
+			.attr("transform", "translate("+margin+","+margin+")")
+			.call(d3.axisLeft(y)
+					.tickValues([0.25, 0.50, 0.75, 1.00])
+					.tickFormat(d3.format(",.2f")) );
+						 	
+		// Add X axis			
+		d3.select("svg").append("g")
+			.attr("transform", "translate("+margin+","+height+")")
+			.call(d3.axisBottom(x)
+				    .tickValues(xTickValues)
+					.tickFormat(xTickFormat) 
+				);
+				
+			
+				//ANNOTATIONS
+				if (xField == "Mental_Fatigue_Score") {
+					label = "There is a striking increasing trend between self-reported stress level and Burn Rate",
+					title = "Mental Fatigue",
+					xval = 300,
+					yval = 275,
+					dy = -100,
+					dx = -50
+				}
+				else if (xField == "Date_of_Joining") {
+					label = "There is no discernible trend here",
+					title = "Start Date",
+					xval = 200,
+					yval = 15,
+					dy = -0,
+					dx = 0
+					//dy = -30,
+					//dx = 20
+				}
+				
+	
+				// Features of the annotation
+				const annotations = [
+				  {
+				    note: {
+				      label: label,
+				      title: title
+				    },
+				    x: xval,
+				    y: yval,
+				    dy: dy,
+				    dx: dx
+				  }
+				]
+
+				// Add annotation to the chart
+				const makeAnnotations = d3.annotation()
+				  .annotations(annotations)
+				d3.select("svg")
+				  .append("g")
+				  .call(makeAnnotations)	
+				
+				
+		}
+
+	// Handler for dropdown value change
+	var dropdownChange = function() {
+    	var selectedOption = d3.select(this).property('value')
+		d3.selectAll("svg > *").remove();
+		plotData(selectedOption);
+	};
+         
+	var dropdown = d3.select("#attribute")
+                    .on("change", dropdownChange);
+					
+	plotData(xField = 'Mental_Fatigue_Score');
+
+}
+</script>
+</body>
+</html>

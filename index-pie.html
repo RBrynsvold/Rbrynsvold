@@ -1,13 +1,10 @@
 <html>
-<title>Bar Chart</title>
-<script src='https://d3js.org/d3.v5.min.js'></script>
+<title>Pie Chart</title>
+<script src='https://d3js.org/d3.v5.min.js'>	
+</script>
 <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js">
 </script>
 <style> 
-	.bar { 
-		fill: steelblue; 
-		outline: thin solid black;
-	}
 	body {
 		font-family: Verdana, Arial, Helvetica, sans-serif;
 		font-size: 12px;
@@ -22,23 +19,19 @@
 		pointer-events: none;
 		padding: 2px;
 	}
-	
 </style>
 <body onload='init()'>
 	
 <div>
-Some personal and professional attributes have a stronger relationship to burnout than others.<br><br>
+Before investigating each attribute's relationship to burnout, take a minute to explore the category breakdowns of these attributes and gain some context.<br><br>
 
-Which attributes are the least impactful/correlated?<br><br>
+Hover over the pie segments to see exact values! <br><br>
 
-Which attributes are the most?<br><br>
-
-Hover over the bars to see exact values! <br><br>
-
-</div>	
+</div>
 	
 <p>
-<label for="attribute">Choose a data attribute to see its relationship to Burn Rate:</label>
+
+<label for="attribute">Choose a data attribute to see the relative breakdowns of its categories in this dataset:</label>
 
 <select name="attribute" id="attribute">
   <option value="Gender">Gender</option>
@@ -49,11 +42,12 @@ Hover over the bars to see exact values! <br><br>
 </select>
 
 </p>
+
 	
 <svg id="container" width=500 height=500></svg>
 <br>
-<a href="index-pie.html"><button>Previous</button></a>
-<a href="index-scatter.html"><button>Next</button></a>
+<a href="index.html"><button>Previous</button></a>
+<a href="index-bars.html"><button>Next</button></a>
 
 <script>
 	
@@ -66,129 +60,110 @@ async function init() {
 		var baseWidth = 500	
 		    baseHeight = 500		 
 		var svg = d3.select("svg"),
-			margin = 75,
-			width = baseWidth - margin
-			height = baseHeight - margin
+			width = baseWidth
+			height = baseHeight
+			radius = baseWidth / 3
 	
 		// aggregate based on dropdown selection
 		var xField = selectedOption
 		var agg_data = d3.nest()
 			  		.key(function(d) { return d[xField];})
-			 	 	.rollup(function(d) { 
-			   			return d3.mean(d, function(g) {return g.Burn_Rate; });
-			  		})
+					.rollup(function(v) { return v.length; })
 					.entries(data);
+		var numRows = 1859
 					
-		//TODO: str -> num conversion and sorting
+					//TODO: check sort is working (and needed)			
 		if (xField == "Designation" || xField == "Resource_Allocation" ) {
 
 			agg_data = agg_data.sort(function(x, y){
 			   return d3.ascending(+x.key, +y.key);
 			})	
 		};
-
-		// axes domain/ranges
-		xdomain = agg_data.map(function(d) { return d.key; });
-		xrange = [0, width - margin];
-		ydomain = [0, 1];
-		yrange = [height - margin, 0]
 		
 		var tooltip = d3.select("body")
 						.append("div")
 						.attr("class", "toolTip")
 		;
-		var formatDecimal = d3.format(".3f")
-
-		var x = d3.scaleBand()
-					.domain(xdomain)
-					.range(xrange);
-		var y = d3.scaleLinear()
-					.domain(ydomain)
-					.range(yrange);
-					
-		var canvas = d3.select("svg")
-						.attr("width", width + 2 * margin)
-						.attr("height", height + 2 * margin)
-						.append("g") 
-							.attr("transform", "translate("+margin+","+margin+")")
-				
-		// Add bars
-		canvas
-		  .selectAll("rect")
-		  .data(agg_data)
-		  .enter()
-		  .append("rect")
-			.attr('class', 'bar')
-			.attr('x',function(d,i) {return x(d.key);})
-			.attr('y',function(d,i) {return y(d.value);})
-		    .attr('width',x.bandwidth())
-					.attr('height', function(d,i) {return height - margin - y(d.value);} )
+		var formatDecimal = d3.format(".1f")
+		
+		var pie = d3.pie()
+		            .value(function(d) { return d.value; });
+		var arc = d3.arc().innerRadius(0).outerRadius(radius);
+		
+ 	    
+		g = svg.append("g")
+       	 	  .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+			   
+ 		var arcs = g.selectAll("arc")
+             		.data(pie(agg_data))
+             		.enter()
+             		.append("g");
+  
+  		// Appending path 
+ 		arcs.append("path")
+     		.attr("d", arc)
+			.attr("fill", function(data, i) {return d3.schemeSet1[i]; } )
 			.on("mousemove", function(d){
 			            tooltip
 			              .style("left", d3.event.pageX + 14 + "px")
 			              .style("top", d3.event.pageY + 10 + "px")
 			              .style("display", "inline-block")
-			              .html("Average Burn Rate: " + 
-									(formatDecimal( d.value) ) );
+						  .html((formatDecimal( d.value / numRows * 100) + "%" ) );
 			        })
 			 .on("mouseout", function(d){ tooltip.style("display", "none"); });
-		
-		// Add Y axis
-		d3.select("svg").append("g")
-			.attr("transform", "translate("+margin+","+margin+")")
-			.call(d3.axisLeft(y)
-					.tickValues([0.25, 0.50, 0.75, 1.00])
-					.tickFormat(d3.format(",.2f")) );
-						 	
-		// Add X axis			
-		d3.select("svg").append("g")
-			.attr("transform", "translate("+margin+","+height+")")
-			.call(d3.axisBottom(x)
-				);
-				
-		
+			
+			
+		var label = d3.arc()
+		    .outerRadius(radius + 50)
+		    .innerRadius(0);
+			
+	  	arcs.append("text")
+	        .attr("transform", function(d) { 
+				return "translate(" + label.centroid(d) + ")"; })
+				.text(function(d) { return d.data.key; });
+			
 		//ANNOTATIONS
 		if (xField == "Gender") {
-			label = "Males have higher average Burn Rate",
+			label = "More females than males",
 			title = "Gender",
-			xval = 200,
-			yval = 275,
-			dy = -100,
-			dx = 50
+			xval = 280,
+			yval = 300,
+			dy = 95,
+			dx = 95
 		}
 		else if (xField == "Company_Type") {
-			label = "Not much difference in Burn Rate between the company types",
+			label = "More Service than Product Companies",
 			title = "Company Type",
-			xval = 200,
-			yval = 275,
-			dy = -100,
-			dx = 50
+			xval = 280,
+			yval = 300,
+			dy = 95,
+			dx = 95
 		}
 		else if (xField == "WFH_Setup_Available") {
-			label = "Noticeably lower average Burn Rate among employees with a WFH setup available",
+			label = "A strong majority of companies do not make this available",
 			title = "Working from Home",
-			xval = 200,
+			xval = 280,
 			yval = 300,
-			dy = -125,
-			dx = 50
+			dy = 95,
+			dx = 95
 		}
 		else if (xField == "Designation") {
-			label = "The higher the seniority, the higher the burn rate",
+			label = "Most employees level 3 and below",
 			title = "Seniority",
-			xval = 300,
+			xval = 280,
 			yval = 300,
-			dy = -125,
-			dx = -50
+			dy = 95,
+			dx = 95
 		}
 		else if (xField == "Resource_Allocation") {
-			label = "The more hours, the greater the Burn Rate",
+			label = "Most employees work between 4 and 7 hours per day",
 			title = "Hours for work",
-			xval = 300,
+			xval = 280,
 			yval = 300,
-			dy = -125,
-			dx = -50
+			dy = 95,
+			dx = 95
 		}
-	
+			
 		// Features of the annotation
 		const annotations = [
 		  {
@@ -209,8 +184,8 @@ async function init() {
 		d3.select("svg")
 		  .append("g")
 		  .call(makeAnnotations)
-				
-		}
+
+};
 
 	// Handler for dropdown value change
 	var dropdownChange = function() {
